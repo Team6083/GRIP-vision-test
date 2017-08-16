@@ -5,10 +5,12 @@ import org.opencv.imgproc.Imgproc;
 
 import edu.wpi.cscore.AxisCamera;
 import edu.wpi.cscore.CameraServerJNI;
+import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.smartdashboard.*;
 import edu.wpi.first.wpilibj.vision.VisionRunner;
 import edu.wpi.first.wpilibj.vision.VisionThread;
@@ -26,16 +28,24 @@ public class Robot extends IterativeRobot {
 	String autoSelected;
 	SendableChooser<String> chooser = new SendableChooser<>();
 	
-	private static final int IMG_WIDTH = 320;
-	private static final int IMG_HEIGHT = 240;
+	private static final int IMG_WIDTH = 640;
+	private static final int IMG_HEIGHT = 360;
 	
 	private VisionThread visionThread;
 	private double centerX = 0.0;
 	private RobotDrive drive;
+	VictorSP left, right;
+	
 	
 	private final Object imgLock = new Object();
 	
 	AxisCamera camera = new AxisCamera("Axis Camera 1","axis-camera1.local");
+	
+	CvSource output;
+	
+	final double error_range=20;
+	final double key = 0.004;
+	final double maxspd = 0.4;
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -47,7 +57,12 @@ public class Robot extends IterativeRobot {
 		chooser.addObject("My Auto", customAuto);
 		SmartDashboard.putData("Auto choices", chooser);
 		
+		left = new VictorSP(1);
+		right = new VictorSP(3);
 		
+		drive = new RobotDrive(left, right);
+		
+		output = CameraServer.getInstance().putVideo("Processed: ", 640, 360);
 		
 	    camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
 	    
@@ -58,6 +73,7 @@ public class Robot extends IterativeRobot {
 	                centerX = r.x + (r.width / 2);
 	            }
 	        }
+	        output.putFrame(pipeline.hsvThresholdOutput());
 	    });
 	    visionThread.start();
 	}
@@ -95,12 +111,32 @@ public class Robot extends IterativeRobot {
 			// Put default auto code here
 			
 			double centerX;
+			double speed = 0;
 			synchronized (imgLock) {
 				centerX = this.centerX;
 			}
 			double turn = centerX - (IMG_WIDTH / 2);
-			drive.arcadeDrive(-0.6, turn * 0.005);
+
+			if(turn>error_range||turn<-error_range) {
+				speed = turn * key;
+				if(speed>maxspd) {
+					speed = maxspd;
+				}
+				else if(speed<-maxspd) {
+					speed = -maxspd;
+				}
+			}
+			else {
+				speed = 0;
+			}
 			
+			
+			drive.tankDrive(speed, -speed);
+			
+			
+			SmartDashboard.putNumber("centerX", centerX);
+			SmartDashboard.putNumber("turn", turn);
+			SmartDashboard.putNumber("speed", speed);
 			break;
 		}
 	}
@@ -111,10 +147,23 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void teleopPeriodic() {
 		double centerX;
+		double speed = 0;
 		synchronized (imgLock) {
 			centerX = this.centerX;
 		}
 		double turn = centerX - (IMG_WIDTH / 2);
+
+		if(turn>error_range||turn<-error_range) {
+			speed = turn * key;
+			if(speed>maxspd) {
+				speed = maxspd;
+			}
+			else if(speed<-maxspd) {
+				speed = -maxspd;
+			}
+		}
+		
+		SmartDashboard.putNumber("speed", speed);
 		SmartDashboard.putNumber("centerX", centerX);
 		SmartDashboard.putNumber("turn", turn);
 	}

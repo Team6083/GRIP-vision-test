@@ -45,15 +45,15 @@ public class GripPipeline implements VisionPipeline {
 		// Step Resize_Image0:
 		Mat resizeImageInput = source0;
 		double resizeImageWidth = 640.0;
-		double resizeImageHeight = 480.0;
+		double resizeImageHeight = 360.0;
 		int resizeImageInterpolation = Imgproc.INTER_CUBIC;
 		resizeImage(resizeImageInput, resizeImageWidth, resizeImageHeight, resizeImageInterpolation, resizeImageOutput);
 
 		// Step HSV_Threshold0:
 		Mat hsvThresholdInput = resizeImageOutput;
-		double[] hsvThresholdHue = {0.0, 141.7996604414261};
-		double[] hsvThresholdSaturation = {0.0, 220.36502546689303};
-		double[] hsvThresholdValue = {223.27060133595597, 255.0};
+		double[] hsvThresholdHue = {104.0, 180.0};
+		double[] hsvThresholdSaturation = {0.0, 255.0};
+		double[] hsvThresholdValue = {154.0, 255.0};
 		hsvThreshold(hsvThresholdInput, hsvThresholdHue, hsvThresholdSaturation, hsvThresholdValue, hsvThresholdOutput);
 
 		// Step CV_erode0:
@@ -72,7 +72,7 @@ public class GripPipeline implements VisionPipeline {
 
 		// Step Filter_Contours0:
 		ArrayList<MatOfPoint> filterContoursContours = findContoursOutput;
-		double filterContoursMinArea = 1000.0;
+		double filterContoursMinArea = 500.0;
 		double filterContoursMinPerimeter = 0.0;
 		double filterContoursMinWidth = 0.0;
 		double filterContoursMaxWidth = 100000.0;
