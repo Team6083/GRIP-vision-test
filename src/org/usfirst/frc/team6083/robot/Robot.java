@@ -4,6 +4,7 @@ import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
 
 import edu.wpi.cscore.AxisCamera;
+import edu.wpi.cscore.CameraServerJNI;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
@@ -33,6 +34,8 @@ public class Robot extends IterativeRobot {
 	private RobotDrive drive;
 	
 	private final Object imgLock = new Object();
+	
+	AxisCamera camera = new AxisCamera("Axis Camera 1","axis-camera1.local");
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -46,7 +49,6 @@ public class Robot extends IterativeRobot {
 		
 		
 		
-	    UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
 	    camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
 	    
 	    visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
@@ -108,6 +110,13 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
+		double centerX;
+		synchronized (imgLock) {
+			centerX = this.centerX;
+		}
+		double turn = centerX - (IMG_WIDTH / 2);
+		SmartDashboard.putNumber("centerX", centerX);
+		SmartDashboard.putNumber("turn", turn);
 	}
 
 	/**
