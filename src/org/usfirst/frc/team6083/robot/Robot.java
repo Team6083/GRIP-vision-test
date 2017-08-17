@@ -44,8 +44,8 @@ public class Robot extends IterativeRobot {
 	CvSource output;
 	
 	final double error_range=20;
-	final double key = 0.004;
-	final double maxspd = 0.4;
+	final double key = 0.0035;
+	final double maxspd = 0.43;
 
 	/**
 	 * This function is run when the robot is first started up and should be
